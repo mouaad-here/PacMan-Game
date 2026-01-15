@@ -25,6 +25,7 @@ public class PacMan extends JPanel {
     private Image orangeGhostImage;
     private Image redGhostImage;
     private Image pinkGhostImage;
+
     // Ghost movement image
     private Image pacmanUpImage;
     private Image pacmanDownImage;
@@ -37,33 +38,6 @@ public class PacMan extends JPanel {
     HashSet<Block> ghosts;
     Block pacman;
 
-    // Static Map, default
-    // X = wall, o = skip, P = pacman, ' ' = food
-    // Ghosts: b = blue, o = orange, p = pink, r = red
-
-//    private String[] tileMap = {
-//            "XXXXXXXXXXXXXXXXXXX",
-//            "X        X        X",
-//            "X XX XXX X XXX XX X",
-//            "X                 X",
-//            "X XX X XXXXX X XX X",
-//            "X    X       X    X",
-//            "XXXX XXXX XXXX XXXX",
-//            "OOOX X       X XOOO",
-//            "XXXX X XXrXX X XXXX",
-//            "O       bpo       O",
-//            "XXXX X XXXXX X XXXX",
-//            "OOOX X       X XOOO",
-//            "XXXX X XXXXX X XXXX",
-//            "X        X        X",
-//            "X XX XXX X XXX XX X",
-//            "X  X     P     X  X",
-//            "XX X X XXXXX X X XX",
-//            "X    X   X   X    X",
-//            "X XXXXXX X XXXXXX X",
-//            "X                 X",
-//            "XXXXXXXXXXXXXXXXXXX"
-//    };
 
     PacMan() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
@@ -144,27 +118,3 @@ public class PacMan extends JPanel {
         }
     }
 }
-
-// in my building block class I didn't use startX and startY.
-//    class Block {
-//        int x;
-//        int y;
-//        int width;
-//        int height;
-//        Image image;
-//
-//        int startX;
-//        int startY;
-//
-//        Block(Image image, int x, int y, int width, int height) {
-//            this.image = image;
-//            this.x = x;
-//            this.y = y;
-//            this.width = width;
-//            this.height = height;
-//            this.startX = x;
-//            this.startY = y;
-//        }
-//
-//
-//    }

@@ -17,13 +17,14 @@ public class Main {
         frame.add(pacmanGame);
 
         frame.pack();
+        // The game is not resizable
         frame.setResizable(false);
-        // the game is not resizable
+
         frame.setVisible(true);
-        // set the location of the window relative to another component
-        // to center a window on the screen pass null
-        //to center relative to a component pass the component as argument
+
+        // The window is centered
         frame.setLocationRelativeTo(null);
+
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     }

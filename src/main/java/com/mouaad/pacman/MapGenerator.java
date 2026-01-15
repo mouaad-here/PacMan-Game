@@ -5,6 +5,7 @@ import java.util.*;
 public class MapGenerator {
     private int rows, columns;
     private char[][] grid;
+    record Pair(int r, int c) {};
 
     MapGenerator(int rows, int columns){
         this.rows = rows;
@@ -13,22 +14,29 @@ public class MapGenerator {
     }
 
     public char[][] generate() {
+
         // fill all the grid with walls
         for(char[] row : grid) Arrays.fill(row,'X');
-        // fixed Ghost House
-
 
         // Carve
         carve(1,1);
 
+        // remove dead ends
+        removeDeadEnds();
+
         // Mirror and Validation
         applyMirrorAndRule();
 
+
+        // fixed Ghost House
         grid[8][9] = 'R';
         grid[9][8] = 'B';
         grid[9][9] = 'P';
         grid[9][10] = 'Y';
+        grid[7][9] = ' ';
 
+        // Pacman start position
+        grid[16][9] = 'M';
 
         return grid;
     }
@@ -68,12 +76,53 @@ public class MapGenerator {
             }
 
         }
-        grid[7][9] = ' ';
-        grid[16][9] = 'M';
+
         for (int r = 0; r < rows; ++r){
             if (grid[r][8] == ' ' && grid[r][10] == ' '){
                 grid[r][9] = ' ';
             }
         }
+    }
+    private void removeDeadEnds() {
+
+        Random rand = new Random();
+        // Detect the dead Ends that mean positions that have only 1 path,
+        // and then choose random wall neighbor position and assign to it ' '
+        // and that create a cyclic map
+        for(int r = 1; r < rows - 1; ++r){
+            for(int c = 1; c < 9; ++c){
+
+                if(grid[r][c] == ' ') {
+                    int pathCount = 0;
+                    ArrayList<Pair> wallNeighbors = new ArrayList<>();
+                    int[][] dirc = {{r-1, c}, {r+1, c}, {r, c-1}, {r, c+1}};
+                    for (int[] pos : dirc) {
+                        ;
+                        int nr = pos[0];
+                        int nc = pos[1];
+
+                        if (isValid(nr, nc)) {
+                            if (grid[nr][nc] == ' ') {
+                                pathCount++;
+                            } else if (grid[nr][nc] == 'X') {
+                                wallNeighbors.add(new Pair(nr, nc));
+                            }
+                        }
+
+                    }
+
+                    if (pathCount == 1 && !wallNeighbors.isEmpty()) {
+                        Pair toBreak = wallNeighbors.get(rand.nextInt(wallNeighbors.size()));
+                        if (toBreak.r() > 0 && toBreak.r() < rows - 1 && toBreak.c() > 0) {
+                            grid[toBreak.r][toBreak.c] = ' ';
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+    private boolean isValid(int nr, int nc){
+        return (nr > 0 && nr < rows - 1) && (nc > 0 && nc <=9);
     }
 }
