@@ -5,7 +5,8 @@ import java.awt.event.*;
 import java.util.HashSet;
 import javax.swing.*;
 import java.awt.Image;
-
+import java.awt.event.KeyListener;
+import java.awt.event.KeyEvent;
 
 public class PacMan extends JPanel {
 
@@ -16,105 +17,87 @@ public class PacMan extends JPanel {
     private int boardWidth = columnCount * tileSize;
     private int boardHeight = rowCount * tileSize;
 
-    // images variables
-    // Wall image
-    private Image wallImage;
-
-    // Ghost image
-    private Image blueGhostImage;
-    private Image orangeGhostImage;
-    private Image redGhostImage;
-    private Image pinkGhostImage;
-
-    // Ghost movement image
-    private Image pacmanUpImage;
-    private Image pacmanDownImage;
-    private Image pacmanLeftImage;
-    private Image pacmanRightImage;
 
     // the building blocks of the game
-    HashSet<Block> walls;
-    HashSet<Block> foods;
-    HashSet<Block> ghosts;
-    Block pacman;
+    HashSet<Wall> walls;
+    HashSet<Food> foods;
+    HashSet<Ghost> ghosts;
+    PacmanPlayer pacman;
 
 
     PacMan() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         setBackground(Color.black);
-        wallImage = new ImageIcon(getClass().getResource("/wall.png")).getImage();
-        blueGhostImage = new ImageIcon(getClass().getResource("/blueGhost.png")).getImage();
-        orangeGhostImage = new ImageIcon(getClass().getResource("/orangeGhost.png")).getImage();
-        redGhostImage = new ImageIcon(getClass().getResource("/redGhost.png")).getImage();
-        pinkGhostImage = new ImageIcon(getClass().getResource("/pinkGhost.png")).getImage();
-        pacmanDownImage = new ImageIcon(getClass().getResource("/pacmanDown.png")).getImage();
-        pacmanUpImage = new ImageIcon(getClass().getResource("/pacmanUp.png")).getImage();
-        pacmanLeftImage = new ImageIcon(getClass().getResource("/pacmanLeft.png")).getImage();
-        pacmanRightImage = new ImageIcon(getClass().getResource("/pacmanRight.png")).getImage();
+
+        // Input
+        PlayerInput input = new PlayerInput(this);
+        this.addKeyListener(input);
+        this.setFocusable(true);
+        this.requestFocusInWindow();
 
         loadMap();
+
+        Timer gameLoop = new Timer(16, e -> {
+                updateGame();
+                repaint();
+        });
+
+        gameLoop.start();
     }
 
     public void loadMap() {
         MapGenerator generator = new MapGenerator(rowCount, columnCount);
         char[][] dynamicGrid = generator.generate();
 
-        walls = new HashSet<Block>();
-        foods = new HashSet<Block>();
-        ghosts = new HashSet<Block>();
+        walls = new HashSet<>();
+        foods = new HashSet<>();
+        ghosts = new HashSet<>();
 
         for (int r = 0; r < rowCount; r++) {
             for (int c = 0; c < columnCount; c++) {
-
-                char tileMapChar = dynamicGrid[r][c];
-
+                char tile = dynamicGrid[r][c];
                 int x = c * tileSize;
                 int y = r * tileSize;
 
-                if (tileMapChar == 'X') {
-                    Block wall = new Block(wallImage, x, y, tileSize, tileSize);
-                    walls.add(wall);
-                } else if (tileMapChar == 'B') {
-                    Block blueGhost = new Block(blueGhostImage, x, y, tileSize, tileSize);
-                    ghosts.add(blueGhost);
-                } else if (tileMapChar == 'R') {
-                    Block redGhost = new Block(redGhostImage, x, y, tileSize, tileSize);
-                    ghosts.add(redGhost);
-
-                } else if (tileMapChar == 'Y') {
-                    Block orangeGhost = new Block(orangeGhostImage, x, y, tileSize, tileSize);
-                    ghosts.add(orangeGhost);
-                } else if (tileMapChar == 'P') {
-                    Block pinkGhost = new Block(pinkGhostImage, x, y, tileSize, tileSize);
-                    ghosts.add(pinkGhost);
-                } else if (tileMapChar == ' ') {
-                    Block food = new Block(null, x + 14, y + 14, 4, 4);
-                    foods.add(food);
-                } else if (tileMapChar == 'M') {
-                    pacman = new Block(pacmanRightImage, x, y, tileSize, tileSize);
+                // Delegating object creation to specialized classes
+                if (tile == 'X') {
+                    Wall w = new Wall(x, y, tileSize);
+                    walls.add(w);
+                    if (w.image == null || w.image.getWidth(null) <= 0) {
+                        System.out.println("ALERT: Wall image failed to load at " + x + "," + y);
+                    }
                 }
+                else if (tile == ' ') foods.add(new Food(x, y, tileSize));
+                else if (tile == 'M') pacman = new PacmanPlayer(x, y, tileSize);
+                else if (isGhost(tile)) ghosts.add(new Ghost(tile, x, y, tileSize));
             }
         }
-
     }
-    public void paintComponent(Graphics g) {
+
+    private boolean isGhost(char tile) {
+        return "BRYP".indexOf(tile) != -1;
+    }
+
+    private void updateGame() {
+        // Move Pacman with wall collision
+        pacman.move(walls);
+
+        // Move Ghosts
+//        for (Ghost ghost : ghosts) {
+//            ghost.updateABFS(walls, pacman);
+//            ghost.move(walls, tileSize);
+//        }
+//
+//        checkInteractions();
+    }
+
+    @Override
+    public void paintComponent(Graphics g){
         super.paintComponent(g);
-        draw(g);
+        pacman.draw(g);
+        for(Wall wall: walls) wall.draw(g);
+        for(Ghost ghost: ghosts) ghost.draw(g);
+        for(Food food:foods) food.draw(g);
     }
-    public void draw(Graphics g) {
 
-        g.drawImage(pacman.image, pacman.x, pacman.y, pacman.width, pacman.height, null);
-
-        for(Block block : walls) {
-            g.drawImage(block.image, block.x, block.y, block.width, block.height, null);
-        }
-        for(Block ghost : ghosts){
-            g.drawImage(ghost.image, ghost.x, ghost.y, ghost.width, ghost.height, null);
-        }
-        g.setColor(Color.white);
-
-        for(Block food : foods) {
-            g.fillRect(food.x, food.y, food.width, food.height);
-        }
-    }
 }

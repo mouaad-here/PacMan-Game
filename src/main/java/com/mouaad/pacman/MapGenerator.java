@@ -114,7 +114,7 @@ public class MapGenerator {
                     if (pathCount == 1 && !wallNeighbors.isEmpty()) {
                         Pair toBreak = wallNeighbors.get(rand.nextInt(wallNeighbors.size()));
                         if (toBreak.r() > 0 && toBreak.r() < rows - 1 && toBreak.c() > 0) {
-                            grid[toBreak.r][toBreak.c] = ' ';
+                            grid[toBreak.r()][toBreak.c()] = ' ';
                         }
                     }
                 }

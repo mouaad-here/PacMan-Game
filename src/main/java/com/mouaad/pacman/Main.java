@@ -14,6 +14,7 @@ public class Main {
 
         PacMan pacmanGame = new PacMan();
         pacmanGame.loadMap();
+
         frame.add(pacmanGame);
 
         frame.pack();
@@ -22,8 +23,11 @@ public class Main {
 
         frame.setVisible(true);
 
+        pacmanGame.requestFocusInWindow();
+
         // The window is centered
         frame.setLocationRelativeTo(null);
+
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
