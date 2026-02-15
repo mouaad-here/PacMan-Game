@@ -33,6 +33,13 @@ public class PlayerInput extends KeyAdapter{
 
         else if(code == KeyEvent.VK_RIGHT){
             game.pacman.updateInput('R');
+        }else if (code == KeyEvent.VK_1 ) {
+            game.startGame(true);
+        }else if (code == KeyEvent.VK_2 ) {
+            game.startGame(false);
+        }else if (code == KeyEvent.VK_3) {
+            game.startVisualization();
         }
     }
+
 }
