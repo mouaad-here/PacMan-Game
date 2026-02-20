@@ -2,13 +2,14 @@ package com.mouaad.pacman;
 
 import java.awt.*;
 import java.util.Set;
+import java.util.List;
 
 public class GameRenderer {
 
     public void render(Graphics g, GameState state, PacmanPlayer pacman, 
                        Set<Wall> walls, Set<Ghost> ghosts, Set<Food> foods, 
                        Rectangle btnNew, Rectangle btnReg, Rectangle btnAlgo, 
-                       int width, int height, Component parent) {
+                       int width, int height, Component parent, List<MapGenerator.Pair> vizPath, int vizStep) {
         
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -20,6 +21,11 @@ public class GameRenderer {
             for(Wall wall : walls) wall.draw(g2);
             for(Ghost ghost : ghosts) ghost.draw(g2);
             for(Food food : foods) food.draw(g2);
+        }
+
+        if (state == GameState.ALGORITHM_VISUALIZATION) {
+            for(Wall wall : walls) wall.draw(g2);
+            drawFloodFill(g2, vizPath, vizStep, 32);
         }
     }
 
@@ -51,4 +57,21 @@ public class GameRenderer {
         g2.setColor(isHovered ? Color.BLACK : Color.WHITE); 
         g2.drawString(text, textX, textY);
     }
+
+    private void drawFloodFill(Graphics2D g2, List<MapGenerator.Pair> path, int step, int tileSize) {
+    if (path == null) return;
+    
+    for (int i = 0; i < step; i++) {
+        MapGenerator.Pair p = path.get(i);
+        // Use a semi-transparent color so it looks like a "scan"
+        g2.setColor(new Color(0, 255, 255, 100)); 
+        g2.fillRect(p.c() * tileSize, p.r() * tileSize, tileSize, tileSize);
+        
+        // Optional: draw a border around the "current" leading edge
+        if (i == step - 1) {
+            g2.setColor(Color.WHITE);
+            g2.drawRect(p.c() * tileSize, p.r() * tileSize, tileSize, tileSize);
+        }
+    }
+}
 }

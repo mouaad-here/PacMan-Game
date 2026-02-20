@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.awt.Image;
 import java.awt.event.KeyListener;
 import java.awt.event.KeyEvent;
+import java.util.List;
 
 
 public class PacMan extends JPanel {
@@ -14,6 +15,8 @@ public class PacMan extends JPanel {
     private GameRenderer renderer = new GameRenderer();
     private char[][] currentMap;
     private Rectangle btnNewMap, btnRegMap, btnAlgo;
+    private List<MapGenerator.Pair> vizPath;
+    private int vizStep = 0;
 
     // Constant variable for the app
     private int rowCount = 23;
@@ -76,7 +79,7 @@ public class PacMan extends JPanel {
         this.addMouseListener(menuHandler);
         this.addMouseMotionListener(menuHandler);
                 
-        loadMap();
+
         
         Timer gameLoop = new Timer(16, e -> {
             updateGame();
@@ -148,8 +151,14 @@ public class PacMan extends JPanel {
     }
 
     private void updateGame() {
-        // Move Pacman with wall collision
-        pacman.move(walls);
+        
+        if(currentState == GameState.PLAYING){
+            pacman.move(walls);
+        }else if (currentState == GameState.ALGORITHM_VISUALIZATION){
+            if(vizPath != null && vizStep < vizPath.size()){
+                vizStep++;
+            }
+        }
 
         // Move Ghosts
 //        for (Ghost ghost : ghosts) {
@@ -159,18 +168,42 @@ public class PacMan extends JPanel {
 //
 //        checkInteractions();
     }
+    
+    protected void startVisualization() {
+    this.currentState = GameState.ALGORITHM_VISUALIZATION;
+    MapGenerator generator = new MapGenerator(rowCount, columnCount);
+    this.currentMap = generator.generate(); // Generate the grid first
+    
+    loadMapFromGrid(this.currentMap);
+    // Start flood fill from Pacman's position (16, 9)
 
+    this.vizPath = generator.getVisitOrder();
+    this.vizStep = 0;
+    }
+    public void loadMapFromGrid(char[][] grid) {
+        walls.clear();
+        foods.clear();
+        ghosts.clear();
+
+        for (int r = 2; r < rowCount; r++) {
+            for (int c = 0; c < columnCount; c++) {
+                char tile = grid[r][c];
+                int x = c * tileSize;
+                int y = r * tileSize;
+
+                if (tile == 'X') walls.add(new Wall(x, y, tileSize));
+                else if (tile == ' ') foods.add(new Food(x, y, tileSize));
+                else if (tile == 'M') pacman = new PacmanPlayer(x, y, tileSize);
+                else if (isGhost(tile)) ghosts.add(new Ghost(tile, x, y, tileSize));
+            }
+        }
+    }
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         renderer.render(g, currentState, pacman, walls, ghosts, foods, 
-                        btnNewMap, btnRegMap, btnAlgo, boardWidth, boardHeight, this);
+                        btnNewMap, btnRegMap, btnAlgo, boardWidth, boardHeight, this, vizPath, vizStep);
     }
 
 
-    protected void startVisualization() {
-    this.currentState = GameState.ALGORITHM_VISUALIZATION;
-    // Logic for the flood-fill "parcours" goes here
-    repaint();
-    }
 }

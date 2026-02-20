@@ -6,7 +6,55 @@ public class MapGenerator {
     private int rows, columns;
     private char[][] grid;
     record Pair(int r, int c) {};
+    private List<Pair> visitOrder = new ArrayList<>();
 
+    public List<Pair> getVisitOrder(){
+        return new ArrayList<>(visitOrder);
+    }
+
+    public boolean verifyConnectivity(int startR, int startC){
+        visitOrder.clear();
+        boolean[][] visited = new boolean[rows][columns];
+        Queue<Pair> queue = new LinkedList<>();
+        queue.add(new Pair(startR, startC));
+        visited[startR][startC] = true;
+        int totalPathTiles = 0;
+        for (int r = 2; r < rows; r++) {
+            for (int c = 0; c < columns; c++){
+                if(grid[r][c] == ' ' || grid[r][c] == 'M' || "BRYP".indexOf(grid[r][c]) != -1){
+                    totalPathTiles++;
+                }
+            }
+        }
+        System.out.println("Total Path Tiles Counted: " + totalPathTiles);
+        int visitedCount = 0;
+        while (!queue.isEmpty()) {
+            Pair current = queue.poll();
+            visitOrder.add(current);
+            visitedCount++;
+
+            int[][] dirs = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+
+            for (int[] d : dirs) {
+                int nr = current.r() + d[0];
+                int nc = current.c() + d[1];
+
+                if(isWithinBounds(nr, nc)){
+                    if(!visited[nr][nc] && grid[nr][nc] != 'X'){
+                        visited[nr][nc] = true;
+                        queue.add(new Pair(nr, nc));
+                    }
+                }
+            }
+            
+        }
+        System.out.println("BFS Visited Tiles: " + visitedCount);
+        if (visitedCount != totalPathTiles) {
+        System.out.println("FAILED: Map has " + (totalPathTiles - visitedCount) + " unreachable tiles!");
+    }
+        return visitedCount == totalPathTiles;
+
+    }
     MapGenerator(int rows, int columns){
         this.rows = rows;
         this.columns = columns;
@@ -15,31 +63,38 @@ public class MapGenerator {
 
     public char[][] generate() {
 
-        // fill all the grid with walls
-        for(char[] row : grid) Arrays.fill(row,'X');
+    boolean isConnected = false;
+    
+    while (!isConnected) {
 
-        // Carve
-        carve(3,1);
+        for(char[] row : grid) Arrays.fill(row, 'X');
 
-        // remove dead ends
+        carve(3, 1);
         removeDeadEnds();
-
-        // Mirror and Validation
         applyMirrorAndRule();
 
+        setupFixedEntities();
 
-        // fixed Ghost House
+        isConnected = verifyConnectivity(16, 9);
+        
+        if (!isConnected) {
+            System.out.println("Map failed connectivity check. Regenerating...");
+        }
+    }
+    return grid;
+}
+
+    private void setupFixedEntities() {
+        // Ghost House
         grid[8][9] = 'R';
         grid[9][8] = 'B';
         grid[9][9] = 'P';
         grid[9][10] = 'Y';
         grid[7][9] = ' ';
 
-        // Pacman start position
+        // Pacman
         grid[16][9] = 'M';
-
-        return grid;
-    }
+}
 
     private void carve(int r, int c) {
         // Start Path
@@ -89,7 +144,7 @@ public class MapGenerator {
         // Detect the dead Ends that mean positions that have only 1 path,
         // and then choose random wall neighbor position and assign to it ' '
         // and that create a cyclic map
-        for(int r = 2; r < rows - 1; ++r){
+        for(int r = 2; r < rows ; ++r){
             for(int c = 1; c < columns / 2; ++c){
 
                 if(grid[r][c] == ' ') {
@@ -124,5 +179,9 @@ public class MapGenerator {
     }
     private boolean isValid(int nr, int nc){
         return (nr > 2 && nr < rows - 1) && (nc > 0 && nc <= columns / 2);
+    }
+
+    private boolean isWithinBounds(int nr, int nc) {
+    return (nr >= 2 && nr < rows - 1) && (nc >= 0 && nc < columns);
     }
 }
