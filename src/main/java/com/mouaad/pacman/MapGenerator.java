@@ -2,6 +2,9 @@ package com.mouaad.pacman;
 
 import java.util.*;
 
+
+
+
 public class MapGenerator {
     private int rows, columns;
     private char[][] grid;
@@ -26,7 +29,6 @@ public class MapGenerator {
                 }
             }
         }
-        System.out.println("Total Path Tiles Counted: " + totalPathTiles);
         int visitedCount = 0;
         while (!queue.isEmpty()) {
             Pair current = queue.poll();
@@ -48,7 +50,7 @@ public class MapGenerator {
             }
             
         }
-        System.out.println("BFS Visited Tiles: " + visitedCount);
+
         if (visitedCount != totalPathTiles) {
         System.out.println("FAILED: Map has " + (totalPathTiles - visitedCount) + " unreachable tiles!");
     }

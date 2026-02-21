@@ -21,6 +21,9 @@ public class PacmanPlayer extends Entity {
         this.pendingDirection = input;
     }
 
+
+
+
     @Override
     protected void setDirection(char dir) {
         super.setDirection(dir);

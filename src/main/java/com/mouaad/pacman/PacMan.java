@@ -6,15 +6,17 @@ import java.util.HashSet;
 import javax.swing.*;
 import java.awt.Image;
 import java.awt.event.KeyListener;
+import java.awt.font.ImageGraphicAttribute;
 import java.awt.event.KeyEvent;
 import java.util.List;
-
+import java.util.Iterator;
 
 public class PacMan extends JPanel {
     private GameState currentState = GameState.MENU;
     private GameRenderer renderer = new GameRenderer();
-    private char[][] currentMap;
-    private Rectangle btnNewMap, btnRegMap, btnAlgo;
+    private char[][] originalMap;
+    private char[][] workingMap;
+    private Rectangle btnNewMap, btnRegMap, btnAlgo, btnPlay;
     private List<MapGenerator.Pair> vizPath;
     private int vizStep = 0;
 
@@ -25,15 +27,28 @@ public class PacMan extends JPanel {
     private int boardWidth = columnCount * tileSize;
     private int boardHeight = rowCount * tileSize;
 
+    // UI element
+    private int score = 0;
+    private int lives = 3;
+    public Image livesImage;
 
     // the building blocks of the game
     HashSet<Wall> walls;
     HashSet<Food> foods;
     HashSet<Ghost> ghosts;
     PacmanPlayer pacman;
-
-
+    int btnWidth = 350;
+    int btnHeight = 50;
+    int centerX = (boardWidth - btnWidth) / 2;
+    
     PacMan() {
+        // initialise the blocks 
+        walls = new HashSet<>();
+        foods = new HashSet<>();
+        ghosts = new HashSet<>();
+        
+        livesImage = new ImageIcon(getClass().getResource("lives.png")).getImage();
+
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         setBackground(Color.black);
         initMenuButtons();
@@ -44,32 +59,53 @@ public class PacMan extends JPanel {
         this.setFocusable(true);
         this.requestFocusInWindow();
         
+        generateNewMap();
+
         this.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (currentState == GameState.MENU) {
-                    if (e.getKeyCode() == KeyEvent.VK_1) startGame(true);  // New Map
-                    if (e.getKeyCode() == KeyEvent.VK_2) startGame(false); // Registered Map
-                    if (e.getKeyCode() == KeyEvent.VK_3) startVisualization();
+        
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if (currentState == GameState.MENU) {
+                score = 0;
+                originalMap = workingMap;
+                loadMapFromGrid(originalMap);
+
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_1:
+                        generateNewMap();
+                        break;
+                        
+                        case KeyEvent.VK_2:
+                            startGame(); 
+                            break;
+                            
+                            case KeyEvent.VK_3:
+                                startVisualization();
+                        break;
+
+                    case KeyEvent.VK_4:
+                        // loadRegisteredMap(); 
+                        break;
                 }
             }
-        });
+        }
+    });
         
         MouseAdapter menuHandler = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (currentState == GameState.MENU) {
                     Point click = e.getPoint();
-                    if (btnNewMap.contains(click)) startGame(true);
-                    else if (btnRegMap.contains(click)) startGame(false);
+                    if (btnNewMap.contains(click)) generateNewMap();
+                    else if (btnPlay.contains(click)) currentState = GameState.PLAYING;
                     else if (btnAlgo.contains(click)) startVisualization();
+                    else if (btnRegMap.contains(click)) {};
                 }
             }
 
             @Override
             public void mouseMoved(MouseEvent e) {
                 if (currentState == GameState.MENU) {
-                    // This forces the renderer to check the mouse position and change the color to yellow
                     repaint(); 
                 }
             }
@@ -77,8 +113,8 @@ public class PacMan extends JPanel {
 
         // Register the handler to both listener types
         this.addMouseListener(menuHandler);
+    
         this.addMouseMotionListener(menuHandler);
-                
 
         
         Timer gameLoop = new Timer(16, e -> {
@@ -89,32 +125,36 @@ public class PacMan extends JPanel {
         gameLoop.start();
      
     }
+    public void generateNewMap(){
+    MapGenerator generator = new MapGenerator(rowCount, columnCount);
+    this.originalMap = generator.generate();
+    this.workingMap = deepCopy(originalMap);
+    loadMapFromGrid(this.originalMap);
+    this.vizPath = generator.getVisitOrder();
+    this.vizStep = 0;
+    }
+
+    private char[][] deepCopy(char[][] originalMap) {
+            char[][] copy = new char[originalMap.length][];
+        for (int i = 0; i < originalMap.length; i++) {
+            copy[i] = originalMap[i].clone();
+        }
+        return copy;
+    }
 
     private void initMenuButtons() {
     int btnWidth = 350;
     int btnHeight = 50;
     int centerX = (boardWidth - btnWidth) / 2;
-    
-    // Position buttons using the extra space in your 23-row layout
-    btnNewMap = new Rectangle(centerX, 250, btnWidth, btnHeight);
-    btnRegMap = new Rectangle(centerX, 320, btnWidth, btnHeight);
-    btnAlgo = new Rectangle(centerX, 390, btnWidth, btnHeight);
+
+    btnNewMap = new Rectangle(centerX, 220, btnWidth, btnHeight);
+    btnPlay = new Rectangle(centerX, 290, btnWidth, btnHeight);
+    btnAlgo = new Rectangle(centerX, 360, btnWidth, btnHeight);
+    btnRegMap = new Rectangle(centerX, 430, btnWidth, btnHeight);
     }
     
-    public void startGame(boolean useNewMap) {
-        currentState = GameState.GENERATING_MAP;
-        
-        if (useNewMap) {
-            MapGenerator generator = new MapGenerator(rowCount, columnCount);
-            this.currentMap = generator.generate();
-        } else {
-            // Logic to load your "registered" (saved) map
-            // this.currentMap = loadRegisteredMap();
-        }
-        
-        // loadMapFromGrid(currentMap);
+    public void startGame() {
         currentState = GameState.PLAYING;
-        repaint();
     }
 
     public void loadMap() {
@@ -151,35 +191,49 @@ public class PacMan extends JPanel {
     }
 
     private void updateGame() {
-        
-        if(currentState == GameState.PLAYING){
+
+        if (currentState == GameState.PLAYING) {
+
             pacman.move(walls);
-        }else if (currentState == GameState.ALGORITHM_VISUALIZATION){
-            if(vizPath != null && vizStep < vizPath.size()){
-                vizStep++;
+
+            checkFoodCollision();
+
+            if (foods.isEmpty()) {
+                System.out.println("VICTORY!");
+                currentState = GameState.MENU; // temporary
             }
         }
 
-        // Move Ghosts
-//        for (Ghost ghost : ghosts) {
-//            ghost.updateABFS(walls, pacman);
-//            ghost.move(walls, tileSize);
-//        }
-//
-//        checkInteractions();
-    }
-    
-    protected void startVisualization() {
-    this.currentState = GameState.ALGORITHM_VISUALIZATION;
-    MapGenerator generator = new MapGenerator(rowCount, columnCount);
-    this.currentMap = generator.generate(); // Generate the grid first
-    
-    loadMapFromGrid(this.currentMap);
-    // Start flood fill from Pacman's position (16, 9)
+        else if (currentState == GameState.ALGORITHM_VISUALIZATION) {
 
-    this.vizPath = generator.getVisitOrder();
-    this.vizStep = 0;
+            if (vizPath != null && vizStep < vizPath.size()) {
+                vizStep++;
+            }
+        }
     }
+
+    private void checkFoodCollision() {
+
+        Iterator<Food> iterator = foods.iterator();
+
+        while (iterator.hasNext()) {
+            Food food = iterator.next();
+
+            if (pacman.getBounds().intersects(food.getBounds())) {
+                iterator.remove(); 
+                score += 1;
+                break;
+            }
+        }
+    }
+    public void startVisualization() {
+        this.currentState = GameState.ALGORITHM_VISUALIZATION;
+        this.workingMap = deepCopy(originalMap);
+        loadMapFromGrid(this.originalMap);
+        this.vizStep = 0;
+    }
+
+
     public void loadMapFromGrid(char[][] grid) {
         walls.clear();
         foods.clear();
@@ -198,12 +252,21 @@ public class PacMan extends JPanel {
             }
         }
     }
+
+    public GameState getCurrentState() {
+    return currentState;
+    }
+
+    public void setState(GameState state) {
+    this.currentState = state;
+    }
+
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
+
         renderer.render(g, currentState, pacman, walls, ghosts, foods, 
-                        btnNewMap, btnRegMap, btnAlgo, boardWidth, boardHeight, this, vizPath, vizStep);
+                        btnNewMap,btnPlay, btnRegMap, btnAlgo, boardWidth, boardHeight, this, vizPath, vizStep,
+                        score, lives, livesImage);
     }
-
-
 }

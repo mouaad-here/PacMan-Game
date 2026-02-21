@@ -8,36 +8,47 @@ public class GameRenderer {
 
     public void render(Graphics g, GameState state, PacmanPlayer pacman, 
                        Set<Wall> walls, Set<Ghost> ghosts, Set<Food> foods, 
-                       Rectangle btnNew, Rectangle btnReg, Rectangle btnAlgo, 
-                       int width, int height, Component parent, List<MapGenerator.Pair> vizPath, int vizStep) {
+                       Rectangle btnNew,Rectangle btnPlay, Rectangle btnReg, Rectangle btnAlgo, 
+                       int width, int height, Component parent, List<MapGenerator.Pair> vizPath, int vizStep,
+                       int score, int lives, Image livesImage ) {
         
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        if (state == GameState.MENU) {
-            drawMenu(g2, btnNew, btnReg, btnAlgo, width, parent);
-        } else {
-            if(pacman != null) pacman.draw(g2);
-            for(Wall wall : walls) wall.draw(g2);
-            for(Ghost ghost : ghosts) ghost.draw(g2);
-            for(Food food : foods) food.draw(g2);
+        switch (state) {
+
+        case MENU -> {
+            drawMenu(g2, btnNew, btnPlay, btnReg, btnAlgo, width, parent);
         }
 
-        if (state == GameState.ALGORITHM_VISUALIZATION) {
-            for(Wall wall : walls) wall.draw(g2);
+        case PLAYING -> {
+            for (Wall wall : walls) wall.draw(g2);
+            for (Food food : foods) food.draw(g2);
+            for (Ghost ghost : ghosts) ghost.draw(g2);
+            if (pacman != null) pacman.draw(g2);
+
+            drawUI(g2, score, lives, width, livesImage);
+        }
+
+        case ALGORITHM_VISUALIZATION -> {
+            for (Wall wall : walls) wall.draw(g2);
+            for (Food food : foods) food.draw(g2); // optional
             drawFloodFill(g2, vizPath, vizStep, 32);
         }
     }
+}
 
     private void drawMenu(Graphics2D g2, Rectangle b1, Rectangle b2, 
-                          Rectangle b3, int width,Component parent) {
+                          Rectangle b3,Rectangle b4, int width,Component parent) {
+
         g2.setColor(Color.YELLOW);
         g2.setFont(new Font("Monospaced", Font.BOLD, 40));
         g2.drawString("PAC-MAN", (width / 2) - 85, 120);
 
         drawButton(g2, b1, "START NEW MAP", parent);
-        drawButton(g2, b2, "REGISTERED MAP", parent);
-        drawButton(g2, b3, "VISUALIZE ALGO", parent);
+        drawButton(g2, b2, "Play", parent);
+        drawButton(g2, b3, "REGISTERED MAP", parent);
+        drawButton(g2, b4, "VISUALIZE ALGO", parent);
     }
 
     private void drawButton(Graphics2D g2, Rectangle rect, String text, Component parent) {
@@ -74,4 +85,21 @@ public class GameRenderer {
         }
     }
 }
+    public void drawUI(Graphics g, int score, int lives, int boardWidth, Image lifImage){
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 16));
+
+        // Score
+
+        g.drawString("SCORE: " + score, 16, 48);
+
+        // Draw lives icons
+        int startX = boardWidth - 48;
+
+        for (int i = 0; i < lives; ++i){
+            g.drawImage(lifImage, startX - (i * 20), 32,20,20, null);
+
+        }
+
+    }
 }
