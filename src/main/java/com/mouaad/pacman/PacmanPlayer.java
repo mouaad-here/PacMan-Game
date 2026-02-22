@@ -21,6 +21,15 @@ public class PacmanPlayer extends Entity {
         this.pendingDirection = input;
     }
 
+    // Helpers
+    
+    public int getRow() {
+    return y / tileSize;
+    }
+
+    public int getCol() {
+        return x / tileSize;
+    }
 
 
 
