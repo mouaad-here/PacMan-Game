@@ -3,17 +3,12 @@ package com.mouaad.pacman;
 import javax.swing.JFrame;
 
 public class Main {
-    public static void main(String[] args){
-        int rowCount = 21;
-        int columnCount = 19;
-        int tileSize = 32;
-        int boardWidth = columnCount * tileSize;
-        int boardHeight = rowCount * tileSize;
+    public static void main(String[] args) {
 
         JFrame frame = new JFrame("Pac-Man");
 
         PacMan pacmanGame = new PacMan();
-        pacmanGame.loadMap();
+
         frame.add(pacmanGame);
 
         frame.pack();
@@ -21,6 +16,8 @@ public class Main {
         frame.setResizable(false);
 
         frame.setVisible(true);
+
+        pacmanGame.requestFocusInWindow();
 
         // The window is centered
         frame.setLocationRelativeTo(null);
