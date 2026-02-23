@@ -12,8 +12,13 @@ public class Entity extends Block {
     public char currentDirection = 'R';
     public char pendingDirection = 'R';
 
+    // Start position for resetting
+    protected int startX, startY;
+
     public Entity(Image image, int x, int y, int size) {
         super(image, x, y, size);
+        this.startX = x;
+        this.startY = y;
     }
 
     public void move(HashSet<Wall> walls) {
@@ -85,5 +90,14 @@ public class Entity extends Block {
 
     protected char getDirection() {
         return currentDirection;
+    }
+
+    public void reset() {
+        this.x = startX;
+        this.y = startY;
+        this.velocityX = 0;
+        this.velocityY = 0;
+        this.currentDirection = 'R';
+        this.pendingDirection = 'R';
     }
 }

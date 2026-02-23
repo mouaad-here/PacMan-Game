@@ -5,5 +5,8 @@ public enum GameState {
     GENERATING_MAP,
     PLAYING,
     ALGORITHM_VISUALIZATION,
-    GAME_OVER
+    GAME_OVER,
+    REGISTERED_MAPS,
+    SAVING_MAP,
+    VICTORY
 }

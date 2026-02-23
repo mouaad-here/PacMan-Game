@@ -5,42 +5,63 @@ import java.awt.Image;
 
 public class PacmanPlayer extends Entity {
     private Image upImage, downImage, leftImage, rightImage;
+    private static Image cachedUp, cachedDown, cachedLeft, cachedRight;
+
     public PacmanPlayer(int x, int y, int tileSize) {
-        super(new ImageIcon(PacmanPlayer.class.getResource("pacmanRight.png")).getImage(),x, y, tileSize);
+        super(null, x, y, tileSize);
         loadImage();
+        if (rightImage != null)
+            this.image = rightImage;
     }
 
     private void loadImage() {
-        upImage = new ImageIcon(getClass().getResource("pacmanUp.png")).getImage();
-        downImage= new ImageIcon(getClass().getResource("pacmanDown.png")).getImage();
-        leftImage = new ImageIcon(getClass().getResource("pacmanLeft.png")).getImage();
-        rightImage = new ImageIcon(getClass().getResource("pacmanRight.png")).getImage();
+        if (cachedUp == null)
+            cachedUp = getImageResource("pacmanUp.png");
+        if (cachedDown == null)
+            cachedDown = getImageResource("pacmanDown.png");
+        if (cachedLeft == null)
+            cachedLeft = getImageResource("pacmanLeft.png");
+        if (cachedRight == null)
+            cachedRight = getImageResource("pacmanRight.png");
+
+        upImage = cachedUp;
+        downImage = cachedDown;
+        leftImage = cachedLeft;
+        rightImage = cachedRight;
     }
+
+    private java.awt.Image getImageResource(String name) {
+        java.net.URL url = getClass().getResource("/com/mouaad/pacman/" + name);
+        return (url != null) ? new ImageIcon(url).getImage() : null;
+    }
+
     // update the pendingDirection to prevents pacman from stopping at turns
     public void updateInput(char input) {
         this.pendingDirection = input;
     }
 
     // Helpers
-    
+
     public int getRow() {
-    return y / tileSize;
+        return y / tileSize;
     }
 
     public int getCol() {
         return x / tileSize;
     }
 
-
-
     @Override
     protected void setDirection(char dir) {
         super.setDirection(dir);
-        
-        if (dir == 'U') this.image = upImage;
-        else if (dir == 'D') this.image = downImage;
-        else if (dir == 'L') this.image = leftImage;
-        else if (dir == 'R') this.image = rightImage;
+
+        if (dir == 'U')
+            this.image = upImage;
+        else if (dir == 'D')
+            this.image = downImage;
+        else if (dir == 'L')
+            this.image = leftImage;
+        else if (dir == 'R')
+            this.image = rightImage;
     }
 
 }
